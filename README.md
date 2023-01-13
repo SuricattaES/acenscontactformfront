@@ -1,4 +1,4 @@
-# holachollofrn
+# Acens Wordpress Form
 
 ## Project setup
 ```
@@ -20,5 +20,5 @@ npm run build
 npm run lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### Add to wordpress
+Insert shortcode [acensform] in the place you want it
