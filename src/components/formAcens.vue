@@ -19,21 +19,6 @@
         </div>
         <div class="field px-0 sm:pl-2 xs:pl-0 col-12 sm:col-6">
             <span class="">
-                <label for="enterprise" class="labelTitle">Empresa</label>
-                <InputText id="enterprise" type="text" v-model="formData.enterprise"
-                           class="w-full mt-1"
-                           @blur="formData$v.enterprise.$validate()"
-                           :class="{ 'p-invalid': formData$v.enterprise.$errors.length }" />
-                <InlineMessage severity="error" v-if="formData$v.enterprise.$errors.length > 0" 
-                               class="mt-1 p-2 line-height-1 w-full text-left justify-content-start" :icon="false" closable="true">
-                    <span v-for="error of formData$v.enterprise.$errors" :key="error.$uid" class="text-sm line-height-1">
-                        <strong>{{ error.$message }}. </strong>
-                    </span>
-                </InlineMessage>
-            </span>
-        </div>
-        <div class="field px-0 sm:pr-3 xs:pr-0 col-12 sm:col-6">
-            <span class="">
                 <label for="nif" class="labelTitle">
                     NIF/CIF <span class="labelTitleMand">*</span>
                 </label>
@@ -49,7 +34,37 @@
                 </InlineMessage>
             </span>
         </div>
+        <div class="field px-0 sm:pr-3 xs:pr-0 col-12 sm:col-6">
+            <span class="">
+                <label for="enterprise" class="labelTitle">Empresa</label>
+                <InputText id="enterprise" type="text" v-model="formData.enterprise"
+                           class="w-full mt-1"
+                           @blur="formData$v.enterprise.$validate()"
+                           :class="{ 'p-invalid': formData$v.enterprise.$errors.length }" />
+                <InlineMessage severity="error" v-if="formData$v.enterprise.$errors.length > 0" 
+                               class="mt-1 p-2 line-height-1 w-full text-left justify-content-start" :icon="false" closable="true">
+                    <span v-for="error of formData$v.enterprise.$errors" :key="error.$uid" class="text-sm line-height-1">
+                        <strong>{{ error.$message }}. </strong>
+                    </span>
+                </InlineMessage>
+            </span>
+        </div>
         <div class="field sm:pl-2 xs:pl-0 px-0 col-12 sm:col-6">
+            <span class="">
+                <label for="job" class="labelTitle">Puesto</label>
+                <InputText id="job" type="text" v-model="formData.job"
+                           class="w-full mt-1"
+                           @blur="formData$v.job.$validate()"
+                           :class="{ 'p-invalid': formData$v.job.$errors.length }" />
+                <InlineMessage severity="error" v-if="formData$v.job.$errors.length > 0" 
+                               class="mt-1 p-2 line-height-1 w-full text-left justify-content-start" :icon="false" closable="true">
+                    <span v-for="error of formData$v.job.$errors" :key="error.$uid" class="text-sm line-height-1">
+                        <strong>{{ error.$message }}. </strong>
+                    </span>
+                </InlineMessage>
+            </span>
+        </div>
+        <div class="field sm:pr-3 xs:pr-0 px-0 col-12 sm:col-6">
             <span class="">
                 <label for="email" class="labelTitle">
                     Email <span class="labelTitleMand">*</span>
@@ -66,7 +81,7 @@
                 </InlineMessage>
             </span>
         </div>
-        <div class="field sm:pr-3 xs:pr-0 px-0 col-12 sm:col-6">
+        <div class="field sm:pl-2 xs:pl-0 px-0 col-12 sm:col-6">
             <span class="">
                 <label for="phone" class="labelTitle">
                     Teléfono <span class="labelTitleMand">*</span>
@@ -131,6 +146,12 @@
                 </a>
             </label>
         </div>
+        <InlineMessage severity="error" v-if="formData$v.serverError.$errors.length > 0" 
+                       class="mt-1 p-2 line-height-1 w-full text-left justify-content-start" :icon="false" closable="true">
+            <span v-for="error of formData$v.serverError.$errors" :key="error.$uid" class="text-sm line-height-1">
+                <strong>{{ error.$message }}. </strong>
+            </span>
+        </InlineMessage>
         <Button class="accensbutton px-3 mt-3" label="Enviar formulario"
                 @click="sendAction" />
 
@@ -160,6 +181,7 @@
             const formDefault = () => ({
                 name: '',
                 enterprise: '',
+                job: '',
                 nif: '',
                 email: '',
                 phone: '',
@@ -183,6 +205,9 @@
                 },
                 enterprise: {
                     maxLength: vlhelpers.withMessage('La empresa no puede exceder los 50 caracteres', maxLength(50)),
+                },
+                job: {
+                    maxLength: vlhelpers.withMessage('El trabajo no puede exceder los 50 caracteres', maxLength(50)),
                 },
                 nif: {
                     required: vlhelpers.withMessage('El NIF/CIF no debe estar vacío', required), 
@@ -214,6 +239,9 @@
                     maxLength: vlhelpers.withMessage('Capcha erróneo', maxLength(1000)),
                     minLength: vlhelpers.withMessage('La casilla de verificación contra robots debe ser marcada', minLength(50)),
                 },
+                serverError: {
+
+                }
             };
 
             const formData$v = useVuelidate(formData_v, formData, { $rewardEarly: true });
@@ -237,9 +265,10 @@
             const sendAction = async function() {
                 let status = await formData$v.value.$validate();
                 if(!status) return;
-                axios.post('https://nodered.suricatta.es/acens/migrandoalanube', {
+                axios.post('https://nodered.suricatta.es/acens/migrandoalanubeV2', {
                     'name': formData.name,
                     'enterprise': formData.enterprise,
+                    'job': formData.job,
                     'VAT': formData.nif,
                     'email': formData.email,
                     'phone': formData.phone,
@@ -253,7 +282,14 @@
                     window.location.assign('https://www.migrandoalanubeconawsbyacens.com/gracias/');
                 })
                 .catch((error) => {
-                    formData.serverError = error.data.message;
+                    if(error.data && error.data.message) {
+                        formData.serverError = error.data.message;
+                        alert('Ocurrió un error, vuelva a intentarlo más tarde: ' + error.data.message);
+                    } else {
+                        formData.serverError = 'Ocurrió un error, vuelva a intentarlo más tarde';
+                        alert('Ocurrió un error, vuelva a intentarlo más tarde:');
+                    }
+                    
                 });
             };
 
@@ -300,5 +336,9 @@ a:hover {
 
 .p-inline-message-icon {
     display: none;
+}
+
+.pi-check:before {
+    content: "✓";
 }
 </style>
